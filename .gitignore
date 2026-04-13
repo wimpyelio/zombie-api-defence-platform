@@ -1,0 +1,12 @@
+# Windows junk
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Editor noise
+.vscode/
+.idea/
+
+# System
+*.log
+*.tmp
