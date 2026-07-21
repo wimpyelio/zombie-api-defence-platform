@@ -10,3 +10,4 @@ $RECYCLE.BIN/
 # System
 *.log
 *.tmp
+node_modules

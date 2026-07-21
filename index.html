@@ -1224,4 +1224,29 @@ setInterval(()=>{
     <span><a href="https://www.linkedin.com/in/aditya-patel-75b4553b8/" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:none">LinkedIn</a></span>
   </div>
 </section>
+<style>
+  .dev-footer{padding:16px 20px;border-top:1px solid var(--border);color:var(--text3)}
+  .dev-footer__inner{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:10px}
+  .dev-footer__name{color:var(--text);font-weight:600}
+  .dev-footer__tagline{color:var(--text3)}
+  .dev-footer__links{display:flex;gap:12px}
+  .dev-footer__link{color:var(--text2);text-decoration:none;transition:color .2s ease}
+  .dev-footer__link:hover{color:var(--accent)}
+</style>
+<footer class="dev-footer" aria-label="Developer Footer">
+  <div class="dev-footer__inner">
+    <span class="dev-footer__name">Aditya Patel</span>
+    <span class="dev-footer__tagline">Building secure, resilient systems with practical clarity.</span>
+    <nav class="dev-footer__links" aria-label="Developer Social Links">
+      <a class="dev-footer__link" href="https://github.com/wimpyelio" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a class="dev-footer__link" href="https://www.linkedin.com/in/aditya-patel-75b4553b8/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+    </nav>
+  </div>
+</footer>
+<script>
+  (function removePreviousDeveloperFooter() {
+    var previousFooter = document.querySelector('footer.dev-footer');
+    if (previousFooter) previousFooter.remove();
+  })();
+</script>
 </body></html>
