@@ -1,13 +1,39 @@
-# Windows junk
-Thumbs.db
-desktop.ini
-$RECYCLE.BIN/
+# Dependencies
+node_modules/
+.pnpm-store/
 
-# Editor noise
-.vscode/
+# Build outputs
+dist/
+build/
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
 
-# System
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
 *.log
-*.tmp
-node_modules
+npm-debug.log*
+
+# Test coverage
+coverage/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Turbo
+.turbo/
+
+# Vite
+*.local
