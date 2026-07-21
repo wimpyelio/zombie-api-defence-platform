@@ -13,7 +13,7 @@ module.exports = {
     project: ['./tsconfig.json', './packages/*/tsconfig.json'],
     tsconfigRootDir: __dirname,
   },
-  plugins: ['@typescript-eslint'],
+  plugins: ['@typescript-eslint', 'import', 'jsdoc'],
   settings: {
     'import/resolver': {
       node: { extensions: ['.js', '.ts'] },

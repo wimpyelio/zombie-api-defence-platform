@@ -137,12 +137,12 @@ Generated: ${now}
     }
   }
 
-  report += "================================================================================
+  report += `================================================================================
 NOTES
 - Auto: Fully automated continuous evidence generation
 - Partial: Platform provides data; human review/attestation required
 - Manual: Platform does not yet address; requires external process
-================================================================================";
+================================================================================`;
 
   return report;
 }
