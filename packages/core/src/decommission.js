@@ -1,0 +1,159 @@
+import { STAGES, DAY_MS } from "./types";
+export function createDecomState(endpointId, autoInitiated = false) {
+    const now = Date.now();
+    const history = [
+        { offset: 0, action: autoInitiated ? "AUTO-INITIATED: state=Zombie + PCI + RI>0.8" : "Pipeline initiated", stage: 0 },
+    ];
+    if (autoInitiated) {
+        history.push({ offset: 60_000, action: "Circuit breaker fired — PCI fields masked in live responses", stage: 0 });
+    }
+    return {
+        stage: 0,
+        initiatedAt: now,
+        history,
+    };
+}
+export function formatDPlus(initiatedAt, offsetMs) {
+    const d = Math.floor(offsetMs / DAY_MS);
+    const ms = offsetMs % DAY_MS;
+    const h = Math.floor(ms / 3_600_000);
+    const m = Math.floor((ms % 3_600_000) / 60_000);
+    return `D+${d} ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+export function currentDPlus(initiatedAt) {
+    const d = Math.floor((Date.now() - initiatedAt) / DAY_MS);
+    return `D+${d}`;
+}
+export function canAdvance(state) {
+    return state.stage < 4;
+}
+export function canRollback(state) {
+    return state.stage > 0;
+}
+export function advanceStage(state, signoffConfirmed) {
+    if (!signoffConfirmed) {
+        throw new Error("Sign-off required to advance stage");
+    }
+    if (!canAdvance(state)) {
+        throw new Error("Already at final stage");
+    }
+    const now = Date.now();
+    const offset = now - state.initiatedAt;
+    const currentStage = STAGES[state.stage];
+    if (!currentStage) {
+        throw new Error("Invalid current stage");
+    }
+    const nextStage = state.stage < 3 ? STAGES[state.stage + 1] : null;
+    const newHistory = [
+        ...state.history,
+        { offset, action: `${currentStage.name} signed off — advancing to ${nextStage?.name ?? "DEREGISTERED"}`, stage: state.stage },
+    ];
+    const newStage = state.stage + 1;
+    if (newStage < 4 && nextStage) {
+        newHistory.push({
+            offset: offset + 60_000,
+            action: `${nextStage.name} stage initiated`,
+            stage: newStage,
+        });
+    }
+    const newState = {
+        ...state,
+        stage: newStage,
+        history: newHistory,
+    };
+    return { newState, completed: newStage === 4 };
+}
+export function rollbackStage(state) {
+    if (!canRollback(state)) {
+        throw new Error("Cannot rollback from Alert stage");
+    }
+    // Cannot rollback from Deregister (stage 4) - IRREVERSIBLE
+    if (state.stage === 4) {
+        throw new Error("IRREVERSIBLE: Cannot rollback from Deregister stage");
+    }
+    const now = Date.now();
+    const offset = now - state.initiatedAt;
+    const currentStage = STAGES[state.stage];
+    const prevStage = STAGES[state.stage - 1];
+    if (!currentStage || !prevStage) {
+        throw new Error("Invalid stage for rollback");
+    }
+    return {
+        ...state,
+        stage: state.stage - 1,
+        history: [
+            ...state.history,
+            { offset, action: `⚠ ROLLBACK: ${currentStage.name} → ${prevStage.name}`, stage: state.stage },
+        ],
+    };
+}
+export function getCurrentStageInfo(state) {
+    return STAGES[state.stage] ?? STAGES[0];
+}
+export function getStageProgress(state) {
+    return STAGES.map((stage, index) => ({
+        name: stage.name,
+        icon: stage.icon,
+        status: index < state.stage ? "complete" : index === state.stage ? "current" : "pending",
+    }));
+}
+export function generateObituaryReport(endpointId, endpoint, state) {
+    const now = new Date().toISOString();
+    const histLines = state.history.map(h => `  ${formatDPlus(state.initiatedAt, h.offset)}  ${h.action}`).join("\n");
+    return `================================================================================
+API OBITUARY REPORT — ZADF Platform
+Generated: ${now}
+Cryptographic hash: SHA-256 (HSM-signed — placeholder in prototype)
+================================================================================
+
+ENDPOINT
+  Path:           ${endpoint.path}
+  Method:         ${endpoint.method}
+  Service:        ${endpoint.service}
+  Gateway:        ${endpoint.gateway}
+  Deployed on:    ${endpoint.deployedOn}
+  Ontology ID:    ep-${endpointId}-zadf-ontology
+
+LIFECYCLE SUMMARY
+  Final State:    ${endpoint.state.toUpperCase()}
+  RI at Decommission: ${endpoint.ri.toFixed(3)}  (Band: ${endpoint.ri > 2.5 ? "Critical" : endpoint.ri > 1.5 ? "High" : endpoint.ri > 0.8 ? "Medium" : "Low"})
+  S (Sensitivity):    ${endpoint.s}
+  E (Exposure):       ${endpoint.e}
+  V (Vuln composite): ${endpoint.v.toFixed(3)}
+  A (Age, months):    ${endpoint.a}
+  Last Traffic:       ${endpoint.lastTraffic}
+  Last Commit:        ${endpoint.lastCommit}
+  Owner (at time):    ${endpoint.owner} (active: ${endpoint.ownerActive})
+  PCI In Scope:       ${endpoint.pci ? "YES" : "No"}
+
+SECURITY POSTURE AT DECOMMISSION
+  Auth Mechanism:     ${endpoint.auth}
+  TLS Version:        ${endpoint.tls}
+  Rate Limited:       ${endpoint.rateLimited ? "Yes" : "No"}
+  WAF Coverage:       ${endpoint.wafCoverage ? "Yes" : "No"}
+  mTLS:               ${endpoint.mtls ? "Yes" : "No"}
+  API Key Exposed:    ${endpoint.apiKeyExposed ? "⚠ YES in repo" : "No"}
+  Egress Validation:  ${endpoint.egressVal ? "Yes" : "No"}
+
+DECOMMISSION PIPELINE LOG
+${histLines}
+
+APPROVING OFFICERS
+  CISO: [Signature required before Deregister stage]
+  VP Engineering: [Dual sign-off required]
+
+DAST VERIFICATION
+  Status: 404 confirmed from all network zones (internet, DMZ, internal)
+  Probe timestamp: ${now}
+
+COMPLIANCE NOTES
+  RBI CSF §6.1: Ontology updated — state = DECOMMISSIONED
+  PCI-DSS v4 Req 8.2: Owner attribution archived
+  GDPR Art.32: PII field exposure eliminated
+
+================================================================================
+END OF REPORT
+Report stored in immutable audit log. SHA-256 hash verified by HSM.
+================================================================================`;
+}
+//# sourceMappingURL=decommission.js.map

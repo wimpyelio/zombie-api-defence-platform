@@ -1,0 +1,1 @@
+{"version":3,"file":"index-D00ilGNM.js","sources":["../../src/main.ts"],"sourcesContent":["// Minimal frontend entry point\nexport const FRONTEND_INIT = true;\n\nconsole.log('ZAD Frontend initialized');"],"names":[],"mappings":"ssBAGA,QAAQ,IAAI,0BAA0B"}
