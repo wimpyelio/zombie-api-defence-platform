@@ -102,11 +102,13 @@ export function getComplianceStats(): Record<string, { auto: number; partial: nu
   const stats: Record<string, { auto: number; partial: number; manual: number; total: number }> = {};
 
   for (const mapping of COMPLIANCE_MAPPINGS) {
-    if (!stats[mapping.regulation]) {
-      stats[mapping.regulation] = { auto: 0, partial: 0, manual: 0, total: 0 };
+    const reg = mapping.regulation;
+    if (!stats[reg]) {
+      stats[reg] = { auto: 0, partial: 0, manual: 0, total: 0 };
     }
-    stats[mapping.regulation][mapping.status]++;
-    stats[mapping.regulation].total++;
+    const statusKey = mapping.status;
+    stats[reg][statusKey]++;
+    stats[reg].total++;
   }
 
   return stats;

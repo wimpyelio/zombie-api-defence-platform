@@ -1,4 +1,4 @@
-import type { DecomState, DecomStage, DecomHistoryEntry } from "./types";
+import type { DecomState, DecomHistoryEntry } from "./types";
 import { STAGES, DAY_MS } from "./types";
 
 export function createDecomState(endpointId: number, autoInitiated = false): DecomState {
@@ -50,17 +50,23 @@ export function advanceStage(state: DecomState, signoffConfirmed: boolean): { ne
   const now = Date.now();
   const offset = now - state.initiatedAt;
 
+  const currentStage = STAGES[state.stage];
+  if (!currentStage) {
+    throw new Error("Invalid current stage");
+  }
+  const nextStage = state.stage < 3 ? STAGES[state.stage + 1] : null;
+  
   const newHistory = [
     ...state.history,
-    { offset, action: `${STAGES[state.stage].name} signed off — advancing to ${state.stage < 3 ? STAGES[state.stage + 1].name : "DEREGISTERED"}`, stage: state.stage },
+    { offset, action: `${currentStage.name} signed off — advancing to ${nextStage?.name ?? "DEREGISTERED"}`, stage: state.stage },
   ];
 
   const newStage = state.stage + 1;
 
-  if (newStage < 4) {
+  if (newStage < 4 && nextStage) {
     newHistory.push({
       offset: offset + 60_000,
-      action: `${STAGES[newStage].name} stage initiated`,
+      action: `${nextStage.name} stage initiated`,
       stage: newStage,
     });
   }
@@ -86,19 +92,26 @@ export function rollbackStage(state: DecomState): DecomState {
 
   const now = Date.now();
   const offset = now - state.initiatedAt;
+  
+  const currentStage = STAGES[state.stage];
+  const prevStage = STAGES[state.stage - 1];
+
+  if (!currentStage || !prevStage) {
+    throw new Error("Invalid stage for rollback");
+  }
 
   return {
     ...state,
     stage: state.stage - 1,
     history: [
       ...state.history,
-      { offset, action: `⚠ ROLLBACK: ${STAGES[state.stage].name} → ${STAGES[state.stage - 1].name}`, stage: state.stage },
+      { offset, action: `⚠ ROLLBACK: ${currentStage.name} → ${prevStage.name}`, stage: state.stage },
     ],
   };
 }
 
 export function getCurrentStageInfo(state: DecomState) {
-  return STAGES[state.stage];
+  return STAGES[state.stage] ?? STAGES[0];
 }
 
 export function getStageProgress(state: DecomState): Array<{ name: string; status: "complete" | "current" | "pending"; icon: string }> {

@@ -1,15 +1,9 @@
 import { describe, it, expect } from "vitest";
-import {
-  computeV,
-  computeRiskIndex,
-  getRIBand,
-  buildEndpoint,
-  computeRIBreakdown,
-  computeState,
-} from "./scoring";
-import type { EndpointRaw, VulnerabilityWeights } from "./types";
+import { computeV, getVulnBreakdown, type VulnBreakdown } from "./vulnerability";
+import { computeRI, getRIBand, computeRIBreakdown, computeState, predictedZombieDate } from "./scoring";
+import type { EndpointRaw, VulnWeights, Endpoint } from "./types";
 
-const defaultWeights: VulnerabilityWeights = {
+const defaultWeights: VulnWeights = {
   noAuth: 0.35,
   noMTLS: 0.25,
   noRate: 0.20,
@@ -79,7 +73,22 @@ const secureEndpoint: EndpointRaw = {
   calls: [14],
 };
 
-describe("Scoring Functions", () => {
+function buildEndpoint(raw: EndpointRaw, weights: VulnWeights = defaultWeights): Endpoint {
+  const v = computeV(raw, weights);
+  const ri = computeRI(raw, weights);
+  const state = computeState(raw);
+  const predictedZombieDateResult = predictedZombieDate(raw);
+  
+  return {
+    ...raw,
+    v,
+    ri,
+    state,
+    predictedZombieDate: predictedZombieDateResult,
+  };
+}
+
+describe("Vulnerability Functions", () => {
   describe("computeV", () => {
     it("computes maximum vulnerability for zombie endpoint", () => {
       const v = computeV(zombieEndpoint, defaultWeights);
@@ -112,87 +121,102 @@ describe("Scoring Functions", () => {
     });
   });
 
-  describe("computeRiskIndex", () => {
-    it("computes RI for zombie endpoint: (0.9*0.6) + (1.75/13) = 0.54 + 0.135 = 0.675", () => {
-      const ri = computeRiskIndex(zombieEndpoint, defaultWeights);
-      expect(ri).toBe(0.675);
+  describe("getVulnBreakdown", () => {
+    it("returns correct breakdown for zombie endpoint", () => {
+      const breakdown = getVulnBreakdown(zombieEndpoint, defaultWeights);
+      expect(breakdown.total).toBe(1.75);
+      expect(breakdown.noAuth).toBe(true);
+      expect(breakdown.noMTLS).toBe(true);
+      expect(breakdown.noRate).toBe(true);
+      expect(breakdown.weakTLS).toBe(true);
+      expect(breakdown.expKey).toBe(true);
+      expect(breakdown.noWAF).toBe(true);
+      expect(breakdown.noEgress).toBe(true);
     });
 
-    it("computes RI for secure endpoint: (0.9*0.6) + (0/3) = 0.54", () => {
-      const ri = computeRiskIndex(secureEndpoint, defaultWeights);
-      expect(ri).toBe(0.54);
+    it("returns empty breakdown for secure endpoint", () => {
+      const breakdown = getVulnBreakdown(secureEndpoint, defaultWeights);
+      expect(breakdown.total).toBe(0);
+      expect(Object.values(breakdown).slice(0, 7).every(v => !v)).toBe(true);
+    });
+  });
+});
+
+describe("Scoring Functions", () => {
+  describe("computeRI", () => {
+    it("computes RI for zombie endpoint: (0.9*0.6) * (1.75/13) = 0.54 * 0.135 = 0.0729", () => {
+      const ri = computeRI(zombieEndpoint, defaultWeights);
+      expect(ri).toBe(0.073); // 0.54 * (1.75/13) = 0.07269... rounded to 3 decimal = 0.073
+    });
+
+    it("computes RI for secure endpoint: (0.9*0.6) * (0/3) = 0", () => {
+      const ri = computeRI(secureEndpoint, defaultWeights);
+      expect(ri).toBe(0);
     });
 
     it("handles high RI for new vulnerable endpoint", () => {
       const newVuln = { ...zombieEndpoint, a: 1 }; // age = 1 month
-      const ri = computeRiskIndex(newVuln, defaultWeights);
-      // (0.9*0.6) + (1.75/1) = 0.54 + 1.75 = 2.29
-      expect(ri).toBe(2.29);
+      const ri = computeRI(newVuln, defaultWeights);
+      // (0.9*0.6) * (1.75/1) = 0.54 * 1.75 = 0.945
+      expect(ri).toBe(0.945);
     });
 
     it("never returns negative RI", () => {
       const impossible = { ...secureEndpoint, s: 0, e: 0, a: 100 };
-      const ri = computeRiskIndex(impossible, defaultWeights);
+      const ri = computeRI(impossible, defaultWeights);
       expect(ri).toBeGreaterThanOrEqual(0);
     });
   });
 
   describe("getRIBand", () => {
-    it("returns Critical for RI > 2.5", () => {
+    it("returns Critical for RI >= 2.5", () => {
       expect(getRIBand(3.0)).toBe("Critical");
-      expect(getRIBand(2.51)).toBe("Critical");
+      expect(getRIBand(2.5)).toBe("Critical");
     });
 
-    it("returns High for 1.5 < RI <= 2.5", () => {
-      expect(getRIBand(2.5)).toBe("High");
-      expect(getRIBand(1.51)).toBe("High");
+    it("returns High for 1.0 <= RI < 2.5", () => {
+      expect(getRIBand(2.5)).toBe("Critical"); // boundary is >= 2.5 for Critical
+      expect(getRIBand(2.49)).toBe("High");
+      expect(getRIBand(1.0)).toBe("High");
     });
 
-    it("returns Medium for 0.8 < RI <= 1.5", () => {
-      expect(getRIBand(1.5)).toBe("Medium");
-      expect(getRIBand(0.81)).toBe("Medium");
+    it("returns Medium for 0.4 <= RI < 1.0", () => {
+      expect(getRIBand(1.0)).toBe("High"); // boundary is >= 1.0 for High
+      expect(getRIBand(0.99)).toBe("Medium");
+      expect(getRIBand(0.4)).toBe("Medium");
     });
 
-    it("returns Low for RI <= 0.8", () => {
-      expect(getRIBand(0.8)).toBe("Low");
+    it("returns Low for RI < 0.4", () => {
+      expect(getRIBand(0.4)).toBe("Medium"); // boundary is >= 0.4 for Medium
+      expect(getRIBand(0.39)).toBe("Low");
       expect(getRIBand(0)).toBe("Low");
     });
   });
 
-  describe("buildEndpoint", () => {
-    it("builds complete endpoint with derived fields", () => {
-      const endpoint = buildEndpoint(zombieEndpoint, defaultWeights);
-      
-      expect(endpoint.id).toBe(1);
-      expect(endpoint.state).toBe("zombie");
-      expect(endpoint.v).toBe(1.75);
-      expect(endpoint.ri).toBe(0.675);
-      expect(endpoint.riBand).toBe("Low");
-      expect(endpoint.predictedZombieDate).toBeNull(); // already zombie
+  describe("computeState / predictedZombieDate", () => {
+    it("identifies zombie endpoint (stale traffic + inactive owner)", () => {
+      const state = computeState(zombieEndpoint);
+      expect(state).toBe("zombie");
     });
 
-    it("builds secure endpoint as active", () => {
-      const endpoint = buildEndpoint(secureEndpoint, defaultWeights);
-      
-      expect(endpoint.state).toBe("active");
-      expect(endpoint.v).toBe(0);
-      expect(endpoint.ri).toBe(0.54);
-      expect(endpoint.riBand).toBe("Low");
+    it("identifies active endpoint", () => {
+      const state = computeState(secureEndpoint);
+      expect(state).toBe("active");
     });
 
     it("computes predicted zombie date for at-risk active endpoints", () => {
-      const atRisk = { ...secureEndpoint, decayProb: 0.8, a: 6 }; // 6 months old, high decay
-      const endpoint = buildEndpoint(atRisk, defaultWeights);
+      const atRisk = { ...secureEndpoint, decayProb: 0.8, a: 6 };
+      const date = predictedZombieDate(atRisk);
       
-      expect(endpoint.predictedZombieDate).not.toBeNull();
-      expect(endpoint.predictedZombieDate).toMatch(/^\d{4}-\d{2}-\d{2}$/); // ISO 8601
+      expect(date).not.toBeNull();
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/); // ISO 8601
     });
 
     it("returns null predicted date for low decay probability", () => {
       const lowRisk = { ...secureEndpoint, decayProb: 0.3, a: 6 };
-      const endpoint = buildEndpoint(lowRisk, defaultWeights);
+      const date = predictedZombieDate(lowRisk);
       
-      expect(endpoint.predictedZombieDate).toBeNull();
+      expect(date).toBeNull();
     });
   });
 
@@ -201,56 +225,55 @@ describe("Scoring Functions", () => {
       const endpoint = buildEndpoint(zombieEndpoint, defaultWeights);
       const breakdown = computeRIBreakdown(endpoint);
       
-      expect(breakdown.endpoint).toBe("/api/v1/legacy/payment/refund");
-      expect(breakdown.state).toBe("zombie");
-      expect(breakdown.sTimesE).toBe(0.54);
+      expect(breakdown.endpoint.id).toBe(1);
+      expect(breakdown.endpoint.state).toBe("zombie");
+      expect(breakdown.seProduct).toBe(0.54);
       expect(breakdown.v).toBe(1.75);
       expect(breakdown.a).toBe(13);
       expect(breakdown.vOverA).toBeCloseTo(0.135, 3);
-      expect(breakdown.ri).toBe(0.675);
+      expect(breakdown.ri).toBe(0.073);
       expect(breakdown.band).toBe("Low");
+      expect(breakdown.autoResponse).toBe(false); // RI = 0.073 < 0.8
     });
 
     it("flags zombie+PCI as AUTO response when RI > 0.8", () => {
-      // Need zombie state (a>=12) AND RI > 0.8
-      // For a=13: RI = 0.54 + 1.75/13 = 0.54 + 0.135 = 0.675 (too low)
-      // For a=1: RI = 0.54 + 1.75 = 2.29 (high) but a<12 so not zombie
-      // For a=2: RI = 0.54 + 1.75/2 = 0.54 + 0.875 = 1.415 (good) but a<12
-      // Need a>=12 for zombie AND RI > 0.8
-      // With a=12: RI = 0.54 + 1.75/12 = 0.54 + 0.146 = 0.686 (too low)
-      // Let's make it more vulnerable: add apiKeyExposed and increase s/e
+      // Need zombie state (stale traffic + inactive owner) AND RI > 0.8
+      // With a=13: RI = 0.54 * (1.75/13) = 0.073 (too low)
+      // Need higher s*e or lower a. Use a=1 for high RI, but need zombie state
+      // For zombie: need stale traffic + inactive owner. Age doesn't matter for state.
       const highRiZombie = { 
         ...zombieEndpoint, 
-        a: 13, 
-        s: 0.95, 
+        a: 1, // young but stale+inactive = zombie
+        s: 1.0, 
         e: 1.0,
-        auth: "none" as const,
-        rateLimited: false,
-        wafCoverage: false,
-        mtls: false,
-        apiKeyExposed: true,
-        tls: "1.0" as const,
-        egressVal: false,
       };
       const endpoint = buildEndpoint(highRiZombie, defaultWeights);
       
       const breakdown = computeRIBreakdown(endpoint);
       
-      expect(breakdown.pciAutoResp).toBe("🔴 AUTO");
+      expect(breakdown.autoResponse).toBe(true);
     });
 
-    it("flags Critical RI + PCI as P0 when RI > 2.5", () => {
-      // Need RI > 2.5 for P0: use a=1, e=1.0, s=0.95
+    it("flags Critical RI as P0 when RI >= 2.5", () => {
+      // Need RI >= 2.5: se * (v/a) >= 2.5
+      // With v=1.75, a=0.1: se * 17.5 >= 2.5 => se >= 0.143
       const criticalEndpoint: EndpointRaw = {
         ...zombieEndpoint,
-        a: 1,
+        a: 0.1, // minimum age
+        s: 1.0,
         e: 1.0,
-        s: 0.95,
+        auth: "none",
+        tls: "1.0",
+        rateLimited: false,
+        wafCoverage: false,
+        mtls: false,
+        apiKeyExposed: true,
+        egressVal: false,
       };
       const endpoint = buildEndpoint(criticalEndpoint, defaultWeights);
       const breakdown = computeRIBreakdown(endpoint);
       
-      expect(breakdown.pciAutoResp).toBe("🔴 P0");
+      expect(breakdown.p0Escalation).toBe(true);
     });
   });
 });

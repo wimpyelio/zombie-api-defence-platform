@@ -11,19 +11,17 @@ export * from "./types";
 // Scoring functions - primary API
 export {
   computeV,
-  computeVScore,
   getVulnBreakdown,
   type VulnBreakdown,
 } from "./vulnerability";
 
 export {
-  computeRiskIndex,
+  computeRI,
   computeState,
-  computePredictedZombieDate,
-  buildEndpoint,
-  computeRIBreakdown,
+  predictedZombieDate,
   getRIBand,
   getRIColor,
+  computeRIBreakdown,
 } from "./scoring";
 
 // Decommission operations
@@ -57,6 +55,8 @@ export {
   ML_MODELS,
   computeDecayForecast,
   getAtRiskEndpoints,
-  getMLModel,
-  getAllMLModels,
+  getMLModels,
+  type DecayForecast,
+  type AtRiskEndpoint,
+  type MLModel,
 } from "./ml-intelligence";

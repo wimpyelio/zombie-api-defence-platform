@@ -18,8 +18,8 @@ describe("Decommission State Machine", () => {
       expect(state.stage).toBe(0);
       expect(state.initiatedAt).toBeGreaterThan(0);
       expect(state.history).toHaveLength(1);
-      expect(state.history[0].action).toBe("Pipeline initiated");
-      expect(state.history[0].stage).toBe(0);
+      expect(state.history[0]!.action).toBe("Pipeline initiated");
+      expect(state.history[0]!.stage).toBe(0);
     });
 
     it("creates auto-initiated state for zombie+PCI+RI>0.8", () => {
@@ -27,8 +27,8 @@ describe("Decommission State Machine", () => {
       
       expect(state.stage).toBe(0);
       expect(state.history).toHaveLength(2);
-      expect(state.history[0].action).toContain("AUTO-INITIATED");
-      expect(state.history[1].action).toContain("Circuit breaker");
+      expect(state.history[0]!.action).toContain("AUTO-INITIATED");
+      expect(state.history[1]!.action).toContain("Circuit breaker");
     });
   });
 
@@ -40,8 +40,8 @@ describe("Decommission State Machine", () => {
       expect(newState.stage).toBe(1);
       expect(completed).toBe(false);
       expect(newState.history).toHaveLength(3);
-      expect(newState.history[1].action).toContain("Alert signed off");
-      expect(newState.history[2].action).toContain("Shadow stage initiated");
+      expect(newState.history[1]!.action).toContain("Alert signed off");
+      expect(newState.history[2]!.action).toContain("Shadow stage initiated");
     });
 
     it("advances through all stages to completion", () => {
@@ -85,7 +85,7 @@ describe("Decommission State Machine", () => {
       const rolledBack = rollbackStage(advanced);
       
       expect(rolledBack.stage).toBe(0);
-      expect(rolledBack.history[rolledBack.history.length - 1].action).toContain("ROLLBACK");
+      expect(rolledBack.history[rolledBack.history.length - 1]!.action).toContain("ROLLBACK");
     });
 
     it("rolls back from Brownout to Shadow", () => {
@@ -186,15 +186,15 @@ describe("Decommission State Machine", () => {
   describe("STAGES configuration", () => {
     it("has 5 stages in correct order", () => {
       expect(STAGES).toHaveLength(5);
-      expect(STAGES[0].name).toBe("Alert");
-      expect(STAGES[1].name).toBe("Shadow");
-      expect(STAGES[2].name).toBe("Brownout");
-      expect(STAGES[3].name).toBe("Tombstone");
-      expect(STAGES[4].name).toBe("Deregister");
+      expect(STAGES[0]!.name).toBe("Alert");
+      expect(STAGES[1]!.name).toBe("Shadow");
+      expect(STAGES[2]!.name).toBe("Brownout");
+      expect(STAGES[3]!.name).toBe("Tombstone");
+      expect(STAGES[4]!.name).toBe("Deregister");
     });
 
     it("each stage has required fields", () => {
-      STAGES.forEach((stage, i) => {
+      STAGES.forEach((stage) => {
         expect(stage.name).toBeTruthy();
         expect(stage.icon).toBeTruthy();
         expect(stage.signoff).toBeTruthy();
@@ -204,7 +204,7 @@ describe("Decommission State Machine", () => {
     });
 
     it("final stage rollback is IRREVERSIBLE", () => {
-      expect(STAGES[4].rollback).toContain("IRREVERSIBLE");
+      expect(STAGES[4]!.rollback).toContain("IRREVERSIBLE");
     });
   });
 });

@@ -15,6 +15,7 @@ export type GatewayType = "apigee" | "kong" | "aws_apigw" | "internal" | "none";
 export type TrafficTrend = "growing" | "stable" | "declining" | "stale" | "dead";
 export type LifecycleState = "active" | "deprecated" | "orphaned" | "zombie";
 export type RIBand = "Critical" | "High" | "Medium" | "Low";
+export type RIBandName = RIBand;
 
 export interface EndpointRaw {
   id: number;
@@ -80,6 +81,9 @@ export const DEFAULT_VULN_WEIGHTS: VulnWeights = {
   noEgress: 0.10,
 };
 
+// Export the type as VulnerabilityWeights for backwards compatibility
+export type VulnerabilityWeights = VulnWeights;
+
 // ============================================================================
 // COMPUTED FIELDS (derived from raw)
 // ============================================================================
@@ -105,6 +109,7 @@ export interface RIBreakdown {
   vOverA: number;       // V / A
   ri: number;           // Final RI
   band: RIBand;
+  riBand: RIBandName;  // Alias for band
   autoResponse: boolean; // Zombie + PCI + RI > 0.8
   p0Escalation: boolean; // RI > 2.5
 }
@@ -198,7 +203,7 @@ export interface KGNode {
   type: NodeType;
   x: number;
   y: number;
-  state?: LifecycleState;
+  state?: LifecycleState | "team" | "pci";
   label: string;
   r?: number;
   critical?: boolean;
