@@ -1,16 +1,24 @@
-import type { DecomState, DecomHistoryEntry } from "./types.js";
-import { STAGES, DAY_MS } from "./types.js";
+import type { DecomState, DecomHistoryEntry } from './types.js';
+import { STAGES, DAY_MS } from './types.js';
 
 export { STAGES };
 
 export function createDecomState(_endpointId: number, autoInitiated = false): DecomState {
   const now = Date.now();
   const history: DecomHistoryEntry[] = [
-    { offset: 0, action: autoInitiated ? "AUTO-INITIATED: state=Zombie + PCI + RI>0.8" : "Pipeline initiated", stage: 0 },
+    {
+      offset: 0,
+      action: autoInitiated ? 'AUTO-INITIATED: state=Zombie + PCI + RI>0.8' : 'Pipeline initiated',
+      stage: 0,
+    },
   ];
 
   if (autoInitiated) {
-    history.push({ offset: 60_000, action: "Circuit breaker fired — PCI fields masked in live responses", stage: 0 });
+    history.push({
+      offset: 60_000,
+      action: 'Circuit breaker fired — PCI fields masked in live responses',
+      stage: 0,
+    });
   }
 
   return {
@@ -25,7 +33,7 @@ export function formatDPlus(_initiatedAt: number, offsetMs: number): string {
   const ms = offsetMs % DAY_MS;
   const h = Math.floor(ms / 3_600_000);
   const m = Math.floor((ms % 3_600_000) / 60_000);
-  return `D+${d} ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return `D+${d} ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
 export function currentDPlus(initiatedAt: number): string {
@@ -34,19 +42,22 @@ export function currentDPlus(initiatedAt: number): string {
 }
 
 export function canAdvance(state: DecomState): boolean {
-  return state.stage < 4;
+  return state.stage < STAGES.length - 1;
 }
 
 export function canRollback(state: DecomState): boolean {
   return state.stage > 0;
 }
 
-export function advanceStage(state: DecomState, signoffConfirmed: boolean): { newState: DecomState; completed: boolean } {
+export function advanceStage(
+  state: DecomState,
+  signoffConfirmed: boolean
+): { newState: DecomState; completed: boolean } {
   if (!signoffConfirmed) {
-    throw new Error("Sign-off required to advance stage");
+    throw new Error('Sign-off required to advance stage');
   }
   if (!canAdvance(state)) {
-    throw new Error("Already at final stage");
+    throw new Error('Already at final stage');
   }
 
   const now = Date.now();
@@ -54,18 +65,31 @@ export function advanceStage(state: DecomState, signoffConfirmed: boolean): { ne
 
   const currentStage = STAGES[state.stage];
   if (!currentStage) {
-    throw new Error("Invalid current stage");
+    throw new Error('Invalid current stage');
   }
-  const nextStage = state.stage < 3 ? STAGES[state.stage + 1] : null;
-  
+
+  // Bounds check: ensure next stage index exists
+  const nextStageIndex = state.stage + 1;
+  if (nextStageIndex >= STAGES.length) {
+    throw new Error('Cannot advance beyond final stage');
+  }
+  const nextStage = STAGES[nextStageIndex];
+  if (!nextStage) {
+    throw new Error('Next stage not defined');
+  }
+
   const newHistory = [
     ...state.history,
-    { offset, action: `${currentStage.name} signed off — advancing to ${nextStage?.name ?? "DEREGISTERED"}`, stage: state.stage },
+    {
+      offset,
+      action: `${currentStage.name} signed off — advancing to ${nextStage.name}`,
+      stage: state.stage,
+    },
   ];
 
   const newStage = state.stage + 1;
 
-  if (newStage < 4 && nextStage) {
+  if (newStage < STAGES.length - 1) {
     newHistory.push({
       offset: offset + 60_000,
       action: `${nextStage.name} stage initiated`,
@@ -79,27 +103,27 @@ export function advanceStage(state: DecomState, signoffConfirmed: boolean): { ne
     history: newHistory,
   };
 
-  return { newState, completed: newStage === 4 };
+  return { newState, completed: newStage === STAGES.length - 1 };
 }
 
 export function rollbackStage(state: DecomState): DecomState {
   if (!canRollback(state)) {
-    throw new Error("Cannot rollback from Alert stage");
+    throw new Error('Cannot rollback from Alert stage');
   }
-  
+
   // Cannot rollback from Deregister (stage 4) - IRREVERSIBLE
-  if (state.stage === 4) {
-    throw new Error("IRREVERSIBLE: Cannot rollback from Deregister stage");
+  if (state.stage === STAGES.length - 1) {
+    throw new Error('IRREVERSIBLE: Cannot rollback from Deregister stage');
   }
 
   const now = Date.now();
   const offset = now - state.initiatedAt;
-  
+
   const currentStage = STAGES[state.stage];
   const prevStage = STAGES[state.stage - 1];
 
   if (!currentStage || !prevStage) {
-    throw new Error("Invalid stage for rollback");
+    throw new Error('Invalid stage for rollback');
   }
 
   return {
@@ -107,7 +131,11 @@ export function rollbackStage(state: DecomState): DecomState {
     stage: state.stage - 1,
     history: [
       ...state.history,
-      { offset, action: `⚠ ROLLBACK: ${currentStage.name} → ${prevStage.name}`, stage: state.stage },
+      {
+        offset,
+        action: `⚠ ROLLBACK: ${currentStage.name} → ${prevStage.name}`,
+        stage: state.stage,
+      },
     ],
   };
 }
@@ -116,25 +144,49 @@ export function getCurrentStageInfo(state: DecomState) {
   return STAGES[state.stage] ?? STAGES[0];
 }
 
-export function getStageProgress(state: DecomState): Array<{ name: string; status: "complete" | "current" | "pending"; icon: string }> {
-  return STAGES.map((stage: typeof STAGES[number], index: number) => ({
+export function getStageProgress(
+  state: DecomState
+): Array<{ name: string; status: 'complete' | 'current' | 'pending'; icon: string }> {
+  return STAGES.map((stage: (typeof STAGES)[number], index: number) => ({
     name: stage.name,
     icon: stage.icon,
-    status: index < state.stage ? "complete" : index === state.stage ? "current" : "pending",
+    status: index < state.stage ? 'complete' : index === state.stage ? 'current' : 'pending',
   }));
 }
 
-export function generateObituaryReport(endpointId: number, endpoint: { 
-  path: string; method: string; service: string; gateway: string; deployedOn: string;
-  state: string; ri: number; s: number; e: number; v: number; a: number;
-  lastTraffic: string; lastCommit: string; owner: string; ownerActive: boolean; pci: boolean;
-  auth: string; tls: string; rateLimited: boolean; wafCoverage: boolean; mtls: boolean;
-  apiKeyExposed: boolean; egressVal: boolean;
-}, state: DecomState): string {
+export function generateObituaryReport(
+  endpointId: number,
+  endpoint: {
+    path: string;
+    method: string;
+    service: string;
+    gateway: string;
+    deployedOn: string;
+    state: string;
+    ri: number;
+    s: number;
+    e: number;
+    v: number;
+    a: number;
+    lastTraffic: string;
+    lastCommit: string;
+    owner: string;
+    ownerActive: boolean;
+    pci: boolean;
+    auth: string;
+    tls: string;
+    rateLimited: boolean;
+    wafCoverage: boolean;
+    mtls: boolean;
+    apiKeyExposed: boolean;
+    egressVal: boolean;
+  },
+  state: DecomState
+): string {
   const now = new Date().toISOString();
-  const histLines = state.history.map(h => 
-    `  ${formatDPlus(state.initiatedAt, h.offset)}  ${h.action}`
-  ).join("\n");
+  const histLines = state.history
+    .map((h) => `  ${formatDPlus(state.initiatedAt, h.offset)}  ${h.action}`)
+    .join('\n');
 
   return `================================================================================
 API OBITUARY REPORT — ZADF Platform
@@ -152,7 +204,7 @@ ENDPOINT
 
 LIFECYCLE SUMMARY
   Final State:    ${endpoint.state.toUpperCase()}
-  RI at Decommission: ${endpoint.ri.toFixed(3)}  (Band: ${endpoint.ri > 2.5 ? "Critical" : endpoint.ri > 1.5 ? "High" : endpoint.ri > 0.8 ? "Medium" : "Low"})
+  RI at Decommission: ${endpoint.ri.toFixed(3)}  (Band: ${endpoint.ri > 2.5 ? 'Critical' : endpoint.ri > 1.5 ? 'High' : endpoint.ri > 0.8 ? 'Medium' : 'Low'})
   S (Sensitivity):    ${endpoint.s}
   E (Exposure):       ${endpoint.e}
   V (Vuln composite): ${endpoint.v.toFixed(3)}
@@ -160,16 +212,16 @@ LIFECYCLE SUMMARY
   Last Traffic:       ${endpoint.lastTraffic}
   Last Commit:        ${endpoint.lastCommit}
   Owner (at time):    ${endpoint.owner} (active: ${endpoint.ownerActive})
-  PCI In Scope:       ${endpoint.pci ? "YES" : "No"}
+  PCI In Scope:       ${endpoint.pci ? 'YES' : 'No'}
 
 SECURITY POSTURE AT DECOMMISSION
   Auth Mechanism:     ${endpoint.auth}
   TLS Version:        ${endpoint.tls}
-  Rate Limited:       ${endpoint.rateLimited ? "Yes" : "No"}
-  WAF Coverage:       ${endpoint.wafCoverage ? "Yes" : "No"}
-  mTLS:               ${endpoint.mtls ? "Yes" : "No"}
-  API Key Exposed:    ${endpoint.apiKeyExposed ? "⚠ YES in repo" : "No"}
-  Egress Validation:  ${endpoint.egressVal ? "Yes" : "No"}
+  Rate Limited:       ${endpoint.rateLimited ? 'Yes' : 'No'}
+  WAF Coverage:       ${endpoint.wafCoverage ? 'Yes' : 'No'}
+  mTLS:               ${endpoint.mtls ? 'Yes' : 'No'}
+  API Key Exposed:    ${endpoint.apiKeyExposed ? '⚠ YES in repo' : 'No'}
+  Egress Validation:  ${endpoint.egressVal ? 'Yes' : 'No'}
 
 DECOMMISSION PIPELINE LOG
 ${histLines}
