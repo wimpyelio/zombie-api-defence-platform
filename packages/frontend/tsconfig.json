@@ -17,7 +17,7 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@zad/core": ["../core/src"]
+      "@zad/core": ["../core/dist"]
     }
   },
   "include": ["src", "src/main.tsx"],

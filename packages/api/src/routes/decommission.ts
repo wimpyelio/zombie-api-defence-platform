@@ -1,7 +1,7 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { STAGES } from '@zad/core';
-import { toDecomStateList, toDecomStateFull } from '../serializers/index.js';
+import { toDecomStateList, toDecomStateFull, type PrismaEndpoint } from '../serializers/index.js';
 
 const decommissionRoutes: FastifyPluginAsyncZod = async (app) => {
   // Get decommission state for all endpoints
@@ -44,23 +44,23 @@ const decommissionRoutes: FastifyPluginAsyncZod = async (app) => {
     }
     
     const endpoints = await app.prisma.endpoint.findMany({
-      where,
-      include: { decomState: true },
-      orderBy: { ri: 'desc' },
-    });
-    
-    return {
-      endpoints: endpoints.map(ep => ({
-        id: ep.id,
-        method: ep.method,
-        path: ep.path,
-        service: ep.service,
-        ri: ep.ri,
-        state: ep.lifecycleState,
-        riBand: ep.riBand,
-        decommissionState: toDecomStateList(ep.decomState),
-      })),
-    };
+          where,
+          include: { decomState: true },
+          orderBy: { ri: 'desc' },
+        });
+
+        return {
+          endpoints: endpoints.map((ep: PrismaEndpoint) => ({
+            id: ep.id,
+            method: ep.method,
+            path: ep.path,
+            service: ep.service,
+            ri: ep.ri,
+            state: ep.lifecycleState,
+            riBand: ep.riBand,
+            decommissionState: toDecomStateList(ep.decomState),
+          })),
+        };
   });
   
   // Get decommission state for single endpoint

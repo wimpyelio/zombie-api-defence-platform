@@ -1,6 +1,6 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { toEndpointFull, toApiEndpointFull, PrismaEndpoint } from '../serializers/index.js';
+import { toEndpointFull, toApiEndpointFull, type PrismaEndpoint } from '../serializers/index.js';
 
 const endpointsRoutes: FastifyPluginAsyncZod = async (app) => {
   // List endpoints with filters
@@ -89,7 +89,7 @@ const endpointsRoutes: FastifyPluginAsyncZod = async (app) => {
     ]);
 
     // Use serializer to convert Prisma types to domain types
-    const enriched = endpoints.map(ep => toEndpointFull(ep as unknown as PrismaEndpoint));
+        const enriched = endpoints.map((ep: PrismaEndpoint) => toEndpointFull(ep as unknown as PrismaEndpoint));
 
     return { endpoints: enriched, total, page, limit };
   });

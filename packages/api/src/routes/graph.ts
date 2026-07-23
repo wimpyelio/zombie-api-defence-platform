@@ -1,7 +1,7 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { buildKnowledgeGraph, getNodeColor, toEndpointFull } from '@zad/core';
-import { PrismaEndpoint } from '../serializers/index.js';
+import { buildKnowledgeGraph, getNodeColor } from '@zad/core';
+import { toEndpointFull, type PrismaEndpoint } from '../serializers/index.js';
 
 const graphRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get('/', {
@@ -36,11 +36,11 @@ const graphRoutes: FastifyPluginAsyncZod = async (app) => {
     const { focus, depth } = request.query as { focus?: string; depth?: number };
     
     const endpoints = await app.prisma.endpoint.findMany({
-      include: { decomState: true },
-    });
-    
-    // Convert to core format using serializer
-    const coreEndpoints = endpoints.map(ep => toEndpointFull(ep as unknown as PrismaEndpoint));
+          include: { decomState: true },
+        });
+
+        // Convert to core format using serializer
+        const coreEndpoints = endpoints.map((ep: PrismaEndpoint) => toEndpointFull(ep as unknown as PrismaEndpoint));
     
     const graph = buildKnowledgeGraph(coreEndpoints);
     
@@ -74,8 +74,8 @@ const graphRoutes: FastifyPluginAsyncZod = async (app) => {
     }
     
     const endpoints = await app.prisma.endpoint.findMany();
-    
-    const coreEndpoints = endpoints.map(e => toEndpointFull(e as unknown as PrismaEndpoint));
+
+        const coreEndpoints = endpoints.map((e: PrismaEndpoint) => toEndpointFull(e as unknown as PrismaEndpoint));
     
     const graph = buildKnowledgeGraph(coreEndpoints);
     

@@ -1,7 +1,7 @@
 import { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { computeRI, computeRIBreakdown, computeState, computeV, getRIBand, getRIColor } from '@zad/core';
-import { toEndpoint, PrismaEndpoint } from '../serializers/index.js';
+import { toEndpoint, type PrismaEndpoint } from '../serializers/index.js';
 
 const riRoutes: FastifyPluginAsyncZod = async (app) => {
   // Get RI breakdown for single endpoint
@@ -158,11 +158,11 @@ const riRoutes: FastifyPluginAsyncZod = async (app) => {
     const { endpointIds } = request.body;
     
     const endpoints = await app.prisma.endpoint.findMany({
-      where: { id: { in: endpointIds } },
-    });
-    
-    const results = endpoints.map(ep => {
-          const endpoint = toEndpoint(ep as unknown as PrismaEndpoint);
+          where: { id: { in: endpointIds } },
+        });
+
+        const results = endpoints.map((ep: PrismaEndpoint) => {
+              const endpoint = toEndpoint(ep as unknown as PrismaEndpoint);
           const v = computeV(endpoint);
           const ri = computeRI(endpoint);
           const band = getRIBand(ri);
