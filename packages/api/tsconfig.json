@@ -16,9 +16,8 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-          "@zad/core": ["../core/dist"]
-        },
-    "types": ["node", "fastify"]
+      "@zad/core": ["../core/dist"]
+    }
   },
   "include": ["src/**/*", "src/plugins/**/*", "src/routes/**/*", "src/types.d.ts"],
   "exclude": ["node_modules", "dist"]
