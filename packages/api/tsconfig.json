@@ -20,6 +20,6 @@
     },
     "types": ["node", "fastify"]
   },
-  "include": ["src/**/*", "src/plugins/**/*", "src/routes/**/*"],
+  "include": ["src/**/*", "src/plugins/**/*", "src/routes/**/*", "src/types.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

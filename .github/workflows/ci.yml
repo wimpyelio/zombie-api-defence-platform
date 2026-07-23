@@ -22,6 +22,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build core package (required for typecheck)
+        run: pnpm --filter @zad/core build
       - name: Run lint
         run: pnpm lint
       - name: Run typecheck
@@ -39,6 +41,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build core package (required for typecheck)
+        run: pnpm --filter @zad/core build
       - name: Run tests
         run: pnpm test
 
@@ -55,6 +59,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build core package first
+        run: pnpm --filter @zad/core build
       - name: Build all packages
         run: pnpm build
 
