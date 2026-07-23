@@ -15,7 +15,7 @@ We release security patches for the following versions:
 
 Instead, report them privately via:
 
-**Email: security@your-org.example.com** (replace with actual contact)
+**Email: zad.elio2107@gmail.com
 
 ### What to Include
 
