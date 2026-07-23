@@ -91,6 +91,4 @@ We recognize security researchers who responsibly disclose vulnerabilities:
 
 ## Contact
 
-- Security email: security@your-org.example.com
-- PGP key: [link to key if available]
-- Bug bounty: [link if applicable]
+- Security email: zad.elio2107@gmail.com
