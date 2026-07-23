@@ -1,5 +1,5 @@
-import { EndpointRaw, Endpoint, VulnWeights, DEFAULT_VULN_WEIGHTS, RIBand, RIBreakdown, LifecycleState } from "./types";
-import { computeV, getVulnBreakdown, VulnBreakdown } from "./vulnerability";
+import { EndpointRaw, Endpoint, VulnWeights, DEFAULT_VULN_WEIGHTS, RIBand, RIBreakdown, LifecycleState } from "./types.js";
+import { computeV } from "./vulnerability.js";
 
 /**
  * Compute Risk Index (RI) = (S × E) × (V / A)
@@ -42,7 +42,7 @@ export function getRIColor(ri: number): string {
 /**
  * Full RI breakdown with all components
  */
-export function computeRIBreakdown(ep: Endpoint, weights: VulnWeights = DEFAULT_VULN_WEIGHTS): RIBreakdown {
+export function computeRIBreakdown(ep: EndpointRaw, weights: VulnWeights = DEFAULT_VULN_WEIGHTS): RIBreakdown {
   const v = computeV(ep, weights);
   const seProduct = ep.s * ep.e;
   const a = Math.max(ep.a, 0.1);

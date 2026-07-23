@@ -43,7 +43,7 @@ export interface EndpointRaw {
   // Ownership & Traffic
   owner: string;
   ownerActive: boolean;
-  sunsetHeader: boolean;
+  sunsetHeader: string;  // ISO date string when sunset header was set, empty if not
   trafficTrend: TrafficTrend;
   trafficP90: number;
   lastTraffic: string;
@@ -93,6 +93,7 @@ export interface EndpointComputed {
   ri: number;                   // Risk Index
   state: LifecycleState;        // Derived lifecycle state
   predictedZombieDate: string | null; // ISO 8601 date or null
+  riBand: RIBandName;           // RI band label (Critical, High, Medium, Low)
 }
 
 export type Endpoint = EndpointRaw & EndpointComputed;

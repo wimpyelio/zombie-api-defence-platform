@@ -1,5 +1,5 @@
-import type { KGNode, KGEdge, NodeType, EdgeType, LifecycleState, Endpoint } from "./types";
-import { STATE_COLORS } from "./types";
+import type { KGNode, KGEdge, LifecycleState, Endpoint } from "./types.js";
+import { STATE_COLORS } from "./types.js";
 
 /**
  * Knowledge Graph - Living Digital Twin of API Ecosystem
@@ -7,6 +7,47 @@ import { STATE_COLORS } from "./types";
  * Nodes: APIs (colored by lifecycle state), Teams, PCI Data Objects
  * Edges: calls/calledBy (API dependencies), owns (Team → API), exposesData (API → PCI)
  */
+
+/**
+ * Convert Prisma endpoint to core Endpoint type for knowledge graph
+ */
+export function toEndpointFull(ep: any): Endpoint {
+  const riBand = ep.ri > 2.5 ? 'Critical' : ep.ri > 1.5 ? 'High' : ep.ri > 0.8 ? 'Medium' : 'Low';
+  return {
+    id: ep.id,
+    method: ep.method,
+    path: ep.path,
+    service: ep.service,
+    s: ep.sensitivity,
+    e: ep.exposure,
+    a: ep.ageMonths,
+    pci: ep.pci,
+    auth: ep.authMechanism,
+    tls: ep.tlsVersion,
+    rateLimited: ep.rateLimited,
+    wafCoverage: ep.wafCoverage,
+    mtls: ep.mtls,
+    apiKeyExposed: ep.apiKeyExposed,
+    egressVal: ep.egressValidated,
+    owner: ep.owner,
+    ownerActive: ep.ownerActive,
+    sunsetHeader: ep.sunsetHeader || '',
+    trafficTrend: ep.trafficTrend,
+    trafficP90: ep.trafficP90,
+    lastTraffic: ep.lastTraffic,
+    lastCommit: ep.lastCommit,
+    decayProb: ep.decayProb,
+    gateway: ep.gateway,
+    deployedOn: ep.deployedOn,
+    calledBy: ep.calledBy,
+    calls: ep.calls,
+    v: ep.v,
+    ri: ep.ri,
+    state: ep.lifecycleState.toLowerCase(),
+    predictedZombieDate: null,
+    riBand,
+  };
+}
 
 export interface KnowledgeGraph {
   nodes: KGNode[];

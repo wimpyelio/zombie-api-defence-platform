@@ -1,7 +1,9 @@
-import type { DecomState, DecomHistoryEntry } from "./types";
-import { STAGES, DAY_MS } from "./types";
+import type { DecomState, DecomHistoryEntry } from "./types.js";
+import { STAGES, DAY_MS } from "./types.js";
 
-export function createDecomState(endpointId: number, autoInitiated = false): DecomState {
+export { STAGES };
+
+export function createDecomState(_endpointId: number, autoInitiated = false): DecomState {
   const now = Date.now();
   const history: DecomHistoryEntry[] = [
     { offset: 0, action: autoInitiated ? "AUTO-INITIATED: state=Zombie + PCI + RI>0.8" : "Pipeline initiated", stage: 0 },
@@ -18,7 +20,7 @@ export function createDecomState(endpointId: number, autoInitiated = false): Dec
   };
 }
 
-export function formatDPlus(initiatedAt: number, offsetMs: number): string {
+export function formatDPlus(_initiatedAt: number, offsetMs: number): string {
   const d = Math.floor(offsetMs / DAY_MS);
   const ms = offsetMs % DAY_MS;
   const h = Math.floor(ms / 3_600_000);
@@ -115,7 +117,7 @@ export function getCurrentStageInfo(state: DecomState) {
 }
 
 export function getStageProgress(state: DecomState): Array<{ name: string; status: "complete" | "current" | "pending"; icon: string }> {
-  return STAGES.map((stage, index) => ({
+  return STAGES.map((stage: typeof STAGES[number], index: number) => ({
     name: stage.name,
     icon: stage.icon,
     status: index < state.stage ? "complete" : index === state.stage ? "current" : "pending",

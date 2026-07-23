@@ -1,4 +1,4 @@
-import { Endpoint, RIBreakdown } from "./types";
+import { Endpoint } from "./types.js";
 
 /**
  * ML Intelligence Module

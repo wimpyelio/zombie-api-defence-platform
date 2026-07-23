@@ -1,0 +1,30 @@
+# CODEOWNERS
+# These users/teams will be requested for review on matching files
+
+# Core domain logic - all changes require review
+/packages/core/ @zad-core-maintainers
+
+# Frontend UI
+/packages/frontend/ @zad-frontend-maintainers
+
+# Backend API (when implemented)
+/packages/api/ @zad-api-maintainers
+
+# CI/CD and tooling
+/.github/workflows/ @zad-devops
+/.github/ @zad-devops
+
+# Configuration files
+/*.json @zad-core-maintainers
+/*.yaml @zad-core-maintainers
+/*.yml @zad-core-maintainers
+/tsconfig.json @zad-core-maintainers
+/pnpm-workspace.yaml @zad-core-maintainers
+
+# Documentation
+/docs/ @zad-docs
+/README.md @zad-core-maintainers
+/CHANGELOG.md @zad-core-maintainers
+/CONTRIBUTING.md @zad-core-maintainers
+/SECURITY.md @zad-security
+/LICENSE @zad-core-maintainers

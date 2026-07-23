@@ -1,0 +1,136 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[FEAT] "
+labels: ["enhancement", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please fill out the template below.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Prerequisites
+      description: Before submitting, please confirm
+      options:
+        - label: I've searched existing issues and this is not a duplicate
+          required: true
+        - label: This is not a bug report (use bug template instead)
+          required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Target Package
+      description: Which package should this feature be implemented in?
+      options:
+        - packages/core (domain logic, RI, state machine, compliance, KG, ML)
+        - packages/frontend (web UI)
+        - packages/api (backend API - when implemented)
+        - packages/shared (shared types - when created)
+        - Cross-cutting / Infrastructure
+        - Documentation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature?
+      options:
+        - Low (nice to have)
+        - Medium (would improve workflow)
+        - High (blocking or critical)
+        - Critical (security/compliance/legal requirement)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this solve? What's the use case?
+      placeholder: |
+        As a security analyst, I need to export compliance reports in PDF format
+        so that I can share them with auditors who don't have system access.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your ideal solution
+      placeholder: |
+        Add a `generateCompliancePDF(endpoints, framework)` function to compliance.ts
+        that uses a PDF generation library to create formatted reports.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Other approaches you've considered
+      placeholder: |
+        - Export JSON and use external tool (manual step)
+        - Generate HTML and print to PDF (loses formatting)
+        - Build custom PDF renderer (maintenance burden)
+
+  - type: textarea
+    id: api
+    attributes:
+      label: API Design (if applicable)
+      description: Sketch the proposed API/interface
+      placeholder: |
+        ```typescript
+        export interface PDFExportOptions {
+          framework: 'RBI' | 'PCI-DSS' | 'GDPR';
+          includeEvidence: boolean;
+          logo?: string; // base64 encoded
+        }
+
+        export function generateCompliancePDF(
+          endpoints: Endpoint[],
+          options: PDFExportOptions
+        ): Promise<Uint8Array>;
+        ```
+      render: typescript
+
+  - type: textarea
+    id: breaking
+    attributes:
+      label: Breaking Changes
+      description: Does this introduce breaking changes?
+      placeholder: "No - new optional function, no existing API changes"
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: Testing Strategy
+      description: How should this be tested?
+      placeholder: |
+        - Unit tests for PDF generation with mock data
+        - Snapshot tests for output format
+        - Integration test with real endpoints fixture
+
+  - type: textarea
+    id: documentation
+    attributes:
+      label: Documentation
+      description: What docs need updating?
+      placeholder: |
+        - Add to API docs (compliance module)
+        - Update README with usage example
+        - Add to CHANGELOG on release
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, mockups, references, related issues
+      placeholder: "Refs: #123, related to compliance dashboard feature"

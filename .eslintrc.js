@@ -10,7 +10,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: ['./tsconfig.json', './packages/*/tsconfig.json'],
+    project: ['./tsconfig.json', './packages/core/tsconfig.json', './packages/api/tsconfig.json', './packages/frontend/tsconfig.json'],
     tsconfigRootDir: __dirname,
   },
   plugins: ['@typescript-eslint'],
@@ -19,5 +19,5 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     'no-console': ['warn', { allow: ['warn', 'error'] }],
   },
-  ignorePatterns: ['dist/', 'node_modules/', '*.config.*', '*.lock', '**/*.test.ts', '**/*.d.ts', '**/*.js', '**/*.js.map', '**/*.d.ts.map'],
+  ignorePatterns: ['dist/', 'node_modules/', '*.config.*', '*.lock', '**/*.test.ts', '**/*.d.ts', '**/*.js', '**/*.js.map', '**/*.d.ts.map', 'packages/frontend/src/main.tsx', 'packages/api/prisma/seed.ts'],
 };

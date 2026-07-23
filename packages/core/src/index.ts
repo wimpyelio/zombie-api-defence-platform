@@ -6,14 +6,14 @@
  */
 
 // Export all types
-export * from "./types";
+export * from "./types.js";
 
 // Scoring functions - primary API
 export {
   computeV,
   getVulnBreakdown,
   type VulnBreakdown,
-} from "./vulnerability";
+} from "./vulnerability.js";
 
 export {
   computeRI,
@@ -22,7 +22,7 @@ export {
   getRIBand,
   getRIColor,
   computeRIBreakdown,
-} from "./scoring";
+} from "./scoring.js";
 
 // Decommission operations
 export {
@@ -31,8 +31,11 @@ export {
   rollbackStage,
   formatDPlus,
   currentDPlus,
+  getCurrentStageInfo,
+  getStageProgress,
   generateObituaryReport,
-} from "./decommission";
+  STAGES,
+} from "./decommission.js";
 
 // Compliance
 export {
@@ -40,7 +43,7 @@ export {
   getComplianceByRegulation,
   getComplianceStats,
   generateComplianceReport,
-} from "./compliance";
+} from "./compliance.js";
 
 // Knowledge graph
 export {
@@ -48,7 +51,8 @@ export {
   getNodeColor,
   getHighlightedNodes,
   renderKnowledgeGraph,
-} from "./knowledge-graph";
+  toEndpointFull,
+} from "./knowledge-graph.js";
 
 // ML intelligence
 export {
@@ -59,4 +63,4 @@ export {
   type DecayForecast,
   type AtRiskEndpoint,
   type MLModel,
-} from "./ml-intelligence";
+} from "./ml-intelligence.js";

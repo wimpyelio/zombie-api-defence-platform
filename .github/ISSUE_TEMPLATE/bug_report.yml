@@ -1,0 +1,146 @@
+name: Bug Report
+description: Report a bug to help us improve
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill out the sections below.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-flight Checklist
+      options:
+        - label: I've searched existing issues (open & closed) for duplicates
+          required: true
+        - label: I'm using the latest version (or have tested against main)
+          required: true
+        - label: This is not a security issue (if it is, see SECURITY.md)
+          required: true
+
+  - type: dropdown
+    id: package
+    attributes:
+      label: Affected Package
+      options:
+        - "@zad/core (domain logic)"
+        - "@zad/frontend (web UI)"
+        - "@zad/api (backend API)"
+        - "Root / CI / Tooling"
+        - "Documentation"
+      description: Which package/component is affected?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Package version or commit SHA
+      placeholder: "0.3.2 or abc1234"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear, concise description of the bug
+      placeholder: |
+        computeRIBreakdown() returns incorrect `riBand` for endpoints with RI exactly 2.5
+        Expected: "Critical", Actual: "High"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal Reproduction
+      description: Code snippet, test case, or steps to reproduce
+      placeholder: |
+        ```typescript
+        const ep = { s: 1, e: 1, v: 2.5, a: 1, pci: false, ... };
+        const breakdown = computeRIBreakdown(ep);
+        console.log(breakdown.riBand); // "High" - should be "Critical"
+        ```
+      render: typescript
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+      placeholder: riBand should be "Critical" when RI >= 2.5
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: riBand is "High" due to strict > comparison
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, browser (if frontend), etc.
+      placeholder: |
+        - OS: Windows 11 / Ubuntu 22.04
+        - Node: 20.11.0
+        - pnpm: 9.0.0
+        - Browser: Chrome 120 (if frontend)
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Stack Traces
+      description: Relevant error output (if any)
+      placeholder: |
+        Error: Cannot read property 's' of undefined
+            at computeRI (scoring.ts:10)
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical (production down, data loss, security)
+        - High (major feature broken, no workaround)
+        - Medium (feature partially broken, workaround exists)
+        - Low (minor issue, cosmetic, edge case)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: regression
+    attributes:
+      label: Regression?
+      options:
+        - label: This worked in a previous version
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Screenshots, related issues, suggested fix, etc.
+      placeholder: |
+        Related to #123
+        Suggested fix: change `ri > 2.5` to `ri >= 2.5` in getRIBand()
+    validations:
+      required: false

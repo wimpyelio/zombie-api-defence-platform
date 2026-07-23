@@ -1,4 +1,4 @@
-import type { ComplianceMapping, ComplianceStatus } from "./types";
+import type { ComplianceMapping } from "./types.js";
 
 /**
  * Compliance Mapping - Platform capabilities to regulatory controls

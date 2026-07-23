@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { computeV, getVulnBreakdown, type VulnBreakdown } from "./vulnerability";
-import { computeRI, getRIBand, computeRIBreakdown, computeState, predictedZombieDate } from "./scoring";
-import type { EndpointRaw, VulnWeights, Endpoint } from "./types";
+import { computeV, getVulnBreakdown, type VulnBreakdown } from "./vulnerability.js";
+import { computeRI, getRIBand, computeRIBreakdown, computeState, predictedZombieDate } from "./scoring.js";
+import type { EndpointRaw, VulnWeights, Endpoint } from "./types.js";
 
 const defaultWeights: VulnWeights = {
   noAuth: 0.35,
@@ -31,7 +31,7 @@ const zombieEndpoint: EndpointRaw = {
   egressVal: false,
   owner: "svc-batch-01",
   ownerActive: false,
-  sunsetHeader: false,
+  sunsetHeader: "2024-01-15",
   trafficTrend: "stale",
   trafficP90: 42,
   lastTraffic: "2d ago",
@@ -61,7 +61,7 @@ const secureEndpoint: EndpointRaw = {
   egressVal: true,
   owner: "payments-team",
   ownerActive: true,
-  sunsetHeader: false,
+  sunsetHeader: "",
   trafficTrend: "stable",
   trafficP90: 45000,
   lastTraffic: "3s ago",
@@ -78,6 +78,7 @@ function buildEndpoint(raw: EndpointRaw, weights: VulnWeights = defaultWeights):
   const ri = computeRI(raw, weights);
   const state = computeState(raw);
   const predictedZombieDateResult = predictedZombieDate(raw);
+  const riBand = getRIBand(ri);
   
   return {
     ...raw,
@@ -85,6 +86,7 @@ function buildEndpoint(raw: EndpointRaw, weights: VulnWeights = defaultWeights):
     ri,
     state,
     predictedZombieDate: predictedZombieDateResult,
+    riBand,
   };
 }
 

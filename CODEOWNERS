@@ -1,0 +1,36 @@
+# CODEOWNERS
+# These users/groups will be requested for review when code in their domain changes
+
+# Core domain logic - requires domain expertise
+/packages/core/src/          @your-org/core-maintainers
+/packages/core/*.test.ts     @your-org/core-maintainers
+
+# Frontend - UI/UX changes
+/packages/frontend/          @your-org/frontend-team
+
+# API - Backend changes
+/packages/api/               @your-org/backend-team
+
+# Shared types - affects all packages
+/packages/shared/            @your-org/core-maintainers
+
+# Configuration - affects entire monorepo
+package.json                 @your-org/maintainers
+pnpm-workspace.yaml          @your-org/maintainers
+tsconfig.json                @your-org/maintainers
+vitest.config.ts             @your-org/maintainers
+.eslintrc.js                 @your-org/maintainers
+.prettierrc                  @your-org/maintainers
+
+# CI/CD - requires ops knowledge
+/.github/workflows/          @your-org/platform-team
+
+# Documentation
+/docs/                       @your-org/docs-team
+README.md                    @your-org/maintainers
+CHANGELOG.md                 @your-org/maintainers
+CONTRIBUTING.md              @your-org/maintainers
+SECURITY.md                  @your-org/security-team
+
+# Git hooks
+/.husky/                     @your-org/maintainers

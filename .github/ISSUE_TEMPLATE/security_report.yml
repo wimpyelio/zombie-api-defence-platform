@@ -1,0 +1,102 @@
+name: Security Vulnerability Report
+description: Report a security vulnerability (private disclosure)
+title: "[SECURITY] "
+labels: ["security", "triage", "confidential"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **⚠️ Do not file public issues for security vulnerabilities.**
+
+        Please email security@your-org.example.com instead, or use GitHub's private vulnerability reporting feature.
+
+        This template is for internal tracking only.
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I understand this should be reported privately, not as a public issue
+          required: true
+        - label: I have read SECURITY.md
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Vulnerability Description
+      description: Clear description of the vulnerability
+      placeholder: |
+        SQL injection in compliance report generation when framework parameter is user-controlled
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity (CVSS if known)
+      options:
+        - Critical (9.0-10.0)
+        - High (7.0-8.9)
+        - Medium (4.0-6.9)
+        - Low (0.1-3.9)
+      description: Estimated CVSS score
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What can an attacker achieve?
+      placeholder: |
+        Remote code execution via malicious framework parameter
+        Data exfiltration of compliance reports
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction Steps
+      description: Minimal steps to reproduce (for internal verification only)
+      placeholder: |
+        1. Send POST /api/compliance/report with framework=PCI-DSS'; DROP TABLE--
+        2. Observe database error / data loss
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected Components
+      description: Packages, versions, files
+      placeholder: |
+        - packages/core/src/compliance.ts:generateReport()
+        - Versions: 0.1.0 - 0.5.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: fix
+    attributes:
+      label: Suggested Fix
+      description: How to remediate
+      placeholder: |
+        Use parameterized queries / Zod schema validation for framework parameter
+        Sanitize input before SQL interpolation
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: CVE, CWE, related issues, advisories
+      placeholder: |
+        CWE-89: SQL Injection
+        Related: #456 (input validation framework)

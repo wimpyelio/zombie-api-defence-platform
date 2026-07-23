@@ -6,9 +6,9 @@ import {
   formatDPlus,
   currentDPlus,
   generateObituaryReport,
-} from "./decommission";
-import { STAGES } from "./types";
-import type { DecomState } from "./types";
+} from "./decommission.js";
+import { STAGES } from "./types.js";
+import type { DecomState } from "./types.js";
 
 describe("Decommission State Machine", () => {
   describe("createDecomState", () => {

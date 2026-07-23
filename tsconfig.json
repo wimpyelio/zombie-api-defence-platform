@@ -19,9 +19,9 @@
     "baseUrl": ".",
     "paths": {
       "@zad/core": ["packages/core/src"],
-      "@zad/api": ["packages/api/src"],
       "@zad/shared": ["packages/shared/src"]
     }
   },
-  "exclude": ["node_modules", "dist", "build", ".turbo"]
+  "include": ["packages/core/src/**/*", "packages/shared/src/**/*"],
+  "exclude": ["node_modules", "dist", "build", ".turbo", "packages/frontend"]
 }

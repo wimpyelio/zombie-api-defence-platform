@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  name          String
+  role          String     @default("VIEWER")  // VIEWER, ANALYST, OPS_LEAD, CISO
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  auditLogs     AuditLog[]
+}
+
+model Endpoint {
+  id                String   @id @default(cuid())
+  method            String
+  path              String
+  service           String
+  sensitivity       Float    // s: 0-1
+  exposure          Float    // e: 0-1
+  ageMonths         Float    // a
+  pci               Boolean  @default(false)
+  authMechanism     String   // none, basic, api_key, jwt, oauth2, mtls
+  tlsVersion        String   // 1.0, 1.1, 1.2, 1.3
+  rateLimited       Boolean  @default(false)
+  wafCoverage       Boolean  @default(false)
+  mtls              Boolean  @default(false)
+  apiKeyExposed     Boolean  @default(false)
+  egressValidated   Boolean  @default(false)
+  owner             String
+  ownerActive       Boolean  @default(true)
+  sunsetHeader      String?  // ISO date string
+  trafficTrend      String   // growing, stable, declining, stale, dead
+  trafficP90        Int
+  lastTraffic       DateTime
+  lastCommit        DateTime
+  decayProb         Float    @default(0)
+  gateway           String
+  deployedOn        DateTime
+  calledBy          String   @default("[]")  // JSON string array
+  calls             String   @default("[]")  // JSON string array
+  
+  // Computed fields
+  v                 Float    @default(0)     // Vulnerability composite
+  ri                Float    @default(0)     // Risk Index
+  riBand            String   @default("LOW") // CRITICAL, HIGH, MEDIUM, LOW
+  lifecycleState    String   @default("ACTIVE") // ACTIVE, DEPRECATED, ORPHANED, ZOMBIE
+  
+  decomState        DecomState?
+  auditLogs         AuditLog[]
+  
+  @@index([service])
+  @@index([lifecycleState])
+  @@index([riBand])
+  @@index([owner])
+}
+
+model DecomState {
+  id             String   @id @default(cuid())
+  endpointId     String   @unique
+  endpoint       Endpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  stage          Int      @default(0)  // 0=ALERT, 1=SHADOW, 2=BROWNOUT, 3=TOMBSTONE, 4=DEREGISTER
+  initiatedAt    DateTime @default(now())
+  history        String   @default("[]")  // JSON string array of { offset, action, stage, timestamp }
+  currentSignoff String?
+  
+  @@index([stage])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpointId  String?
+  endpoint    Endpoint? @relation(fields: [endpointId], references: [id], onDelete: SetNull)
+  action      String
+  resource    String
+  resourceId  String
+  details     String   @default("{}")  // JSON string
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([endpointId])
+  @@index([createdAt])
+}
